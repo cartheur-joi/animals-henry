@@ -1,0 +1,220 @@
+May 2019
+From a fresh chip computer and modified toy to a functional animal deployment (MVP).
+
+PRE. Disassemble one of the 1985-88 Ruxpin robotic toys (bear or caterpillar) so that the speaker and motors can be accessed using male jumper pins. With the bear, one can use male-male jumper wires of the type illustrated in the figure "jumper_wires.jpg", and connect direct, since each component unplugs from the motherboard, while the caterpillar requires cutting the wires from the motherboard and soldering of each half of a male-male jumper wire. Create the jumper connections to the mono-channel eight-ohm speaker. The first-generation toys use three motors: eyes, nose, and mouth. The third-generation toys use two motors: eyes and nose-mouth. The motors contain five wires: blue, green, crimson, yellow, and brown. Sending a logic signal to the blue wire will open the respective animation, while the green wire will close the respective animation. Research is being conducted on the utility of the other three wires in terms of eye animation and this functionality in terms of the chip and the remaining gpio ports. However, at this time the three-wire position sensor from the motors have been removed.
+
+A. On a host Linux computer, connect a jumper wire between pins FEL and GND on the chip board, as shown in the figure "jumper_pins.jpg". Using a USB micro to A, plug it into the host computer. If the host computer is a fresh install of Linux and intended to be used for development of both the animals core code (mono) and the animals voice, go to step 20. Regardless, flash the newly formatted chip using the command from /home/chip/SHIP_SDK/CHIP-tools
+
+	./chip-update-firmware.sh -g
+
+B. On the fresh chip, connect the VGA board and connect the external keyboard and mouse with Typhoon hub, and use the external battery with the USB cable just used on the host computer to power it. Wait for boot. Create the working directory, mkdir /home/projects/animals-fred. Connect with the WiFi from the Ziggo box: agamemnon | TRkfzepkpm6k or, better yet, aeon-alone | 7z4vhxpPrceh. Open a terminal on the desktop and setup the new repositories for the fresh OS, upgrade, install animals. This can continue to be done with the VGA board, else, over SSH from either a Windows (RDP) or Linux, as:
+
+	ssh chip@192.168.1.143, or whatever the IP address is revealed by executing step 15.
+
+Begin by immediately running: sudo apt-get update.
+
+1. Add the following two lines, using nano, to /etc/apt/sources.list (removing any listings of nextthing)
+	deb http://chip.jfpossibilities.com/chip/debian/repo jessie main
+	deb http://chip.jfpossibilities.com/chip/debian/pocketchip jessie main
+
+Remove the references to jessie backports as they no longer exist. The sources.list file should appear in the following manner to avoid errors:
+
+	deb http://ftp.us.debian.org/debian/ jessie main contrib non-free
+	deb-src http://ftp.us.debian.org/debian/ jessie main contrib non-free
+
+	deb http://security.debian.org/ jessie/updates main contrib non-free
+	deb-src http://security.debian.org/ jessie/updates main contrib non-free
+
+	deb http://chip.jfpossibilities.com/chip/debian/repo jessie main
+	deb http://chip.jfpossibilities.com/chip/debian/pocketchip jessie main
+
+2. Change the line, using nano, in etc/apt/preferences (removing any references to nextthing)
+	Pin: origin chip.jfpossibilities.com
+
+3. Update and upgrade the installation
+	sudo apt-get update
+	sudo apt-get install apt-transport-https
+	sudo apt-get upgrade
+	sudo apt-get install xrdp
+
+4. Add the mono repository
+	sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+	sudo apt install apt-transport-https ca-certificates
+	echo "deb https://download.mono-project.com/repo/debian stable-jessie main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+	sudo apt update
+	sudo apt upgrade
+
+5. Install animals script prerequisites
+	sudo apt-get install git
+	sudo apt-get install python-setuptools python-dev build-essential espeak alsa-utils
+	sudo apt-get install python-alsaaudio python-numpy python-bottle mplayer
+
+
+C. If deploying animals C# natively, follow the next steps. If puppeteering, skip to D.
+
+
+6. Install pocketsphinx prerequisites
+	sudo apt-get install gcc automake autoconf libtool bison swig python-dev libpulse-dev
+
+7. Clone and install sphinxbase
+	Create a suitable install directory "/home/chip/software"
+	Clone sphinx from github: git clone https://github.com/cmusphinx/sphinxbase.git
+	Step into the sphinxbase directory, run:
+	./autogen.sh
+	make
+	sudo make install
+	Check the installation, call sphinx_lm_convert, and an error will appear: libsphinxbase.so.3: cannot open shared object file: No such file or directory.
+	Add path to the location where sphinxbase is installed:
+	sudo nano /etc/ld.so.conf
+	add a new line: /usr/local/lib
+	refresh config: sudo ldconfig
+	Retest the installation.
+
+8. Clone and install pocketsphinx
+	Use the existing directory containing sphinxbase
+	Clone pocketsphinx from github: git clone https://github.com/cmusphinx/pocketsphinx.git
+	Step into the pocketsphinx directory, run:
+	./autogen.sh
+	make
+	sudo make install
+	Check the installation, as pocketsphinx_continuous, and an error will appear libpocketsphinx.so.3: cannot open shared object file: No such file or directory.
+	Refresh config: sudo ldconfig
+	Retest the installation.
+
+NOTE: If something goes wrong, delete and start over:
+	sudo rm -r pocketsphinx
+
+9. Use mv to place the necessary files for pocketsphinx
+	Create a new directory in /use/share:
+		sudo mkdir pocketsphinx
+	Move the contents of folder "model" to the new directory,
+		sudo mv model /usr/share/pocketsphinx
+
+10. Test the necessary use of the application
+	pocketsphinx_continuous \
+    -hmm /usr/share/pocketsphinx/model/hmm/en_US/en-us \
+    -dict /usr/share/pocketsphinx/model/lm/en_US/cmudict-en-us.dict \
+    -lm /usr/share/pocketsphinx/model/lm/en_US/en-us.lm.bin \
+    -inmic yes
+
+	If it fails because there is no microphone or other audio device present, install the desired input device.
+	Retest the application.
+
+11. Install the python pocketsphinx wrapper
+	sudo apt-get install -qq python python-dev python-pip build-essential swig git libpulse-dev libasound2-dev
+	python -m pip install --upgrade pip setuptools wheel
+	pip install --upgrade pocketsphinx
+
+12. Install mono-runtime
+	sudo apt-get install mono-runtime
+
+13. Place the animals runtime code folder in a convenient location and run using this command, for example:
+	cd /home/chip/projects/animals-linux-hf/
+	mono Cartheur.Animals.Console.exe -aeon -adult -english -theonlyone
+	mono Cartheur.Animals.Gui.Mono.exe
+
+14. If testing with the Gui animals, install gtk-sharp
+	git clone https://github.com/GtkSharp/GtkSharp.git
+	cd GtkSharp
+	sudo apt-get install nuget
+	./build.sh
+	Why isn't the dll distributed with the app?
+
+ERROR: Stopped on--Error: Could not load file or assembly 'System.Runtime' or one of its dependencies.
+
+NOTE: The ideal development environment is mono with nuget.
+
+D. For remote puppeteering, place the folder "animals_scripts" in a convenient location on chip.
+
+
+15. To have the animals service python file run in Linux with animal startup, open a terminal with 'sudo crontab -e' and add the following to the end
+
+	@reboot sudo python /home/chip/projects/animals-fred/animalsFred.py &
+
+
+The above gets the eye motor to work, but does not allow hosting of the bottle server. I can see the IP of the animal when I login to the network gateway modem, but it will not show the webpage. Perhaps a permission issue. A fix is to place the shell script ./animals_startup.sh, which contains this code (via nano)
+
+	#!/bin/sh
+	python /home/chip/projects/animals-fred/animalsFred.py &
+
+	And place it inside the /etc/profile.d folder, via:
+
+	sudo cp animals_startup.sh /etc/profile.d
+
+	It will run twice.
+
+16. If the IP address of the animal is unknown, login to the Ziggo box at 192.168.178.1, with the password 68617882.
+	Fred   is on: 192.168.178.143
+	Henry  is on: 192.168.178.144
+	Animal is on: 192.168.178.192
+
+E. Construct the motor driver board and connect the chip.
+
+17. Create a new dual-driver board with SparkFun ROB-14450 motor drivers.
+	Find a solderless breadboard where its outer voltage rails can be removed, revealing only the inner tracks.
+	Wire the pattern shown in the figure "driver_board_wires_*.jpg".
+	Plugin the motor driver boards as shown in the figure "driver_board_assembled.jpg". The forward board is number one while the back is number two.
+	
+18. Assemble the chip computer with the motor driver board.
+	Connect chip VCC, BAT, and GND ports to the driver board according to the figure "wiring_diagram.jpg".
+	
+19. Wire the chip gpio ports to the motor driver board ports.
+	Connect a pair of gpio ports to the motor driver (number)ports based on the corresponding animation:
+		a. Nose open:   XIO-P2 to (1)AI2.
+		b. Nose close:  XIO-P3 to (1)AI1.
+		c. Eyes open:   XIO-P4 to (2)AI2.
+		d. Eyes close:  XIO-P6 to (2)AI1.
+		e. Mouth open:  XIO-P5 to (1)BI2.
+		f. Mouth close: XIO-P7 to (1)BI1.
+		g. Note that XIO-P0 and XIO-P1 are free.
+
+20. Wire the motor driver board ports to the robotic toy.
+	Driver board one controls the nose and mouth animation. Driver board two controls the eye animation.
+		a. Driver board one port AO1 connects to nose green. This is tagged yellow in the wire bundle.
+		b. Driver board one port AO2 connects to nose blue.
+		c. Driver board one port BO1 connects to mouth green. This is tagged blue in the wire bundle.
+		d. Driver board one port BO2 connects to mouth blue.
+		e. Driver board two port AO1 connects to eyes green. This is tagged red in the wire bundle.
+		f. Driver board two port AO2 connects to eyes blue.
+		g. Note to use hot glue to solidify the chip-jumper-to-board connections.
+
+F. Startup your new talking animal friend and begin a conversational experience.
+
+21. Connect the animals software from a dev Linux distro.
+		a. In the case of a fresh development environment, execute steps 3, 4, and the first sub-step of 5.
+		b. Install mono-devel (or mono-complete), and the development environment.
+			sudo apt intall mono-devel
+			sudo apt install monodevelop
+			NOTE: Does not work in Ubuntu 19.04.
+		c. Install vscode
+			sudo apt-key adv --keyserver packages.microsoft.com --recv-keys EB3E94ADBE1229CF
+			sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893
+			sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-bionic-prod bionic main" > /etc/apt/sources.list.d/dotnetdev.list'
+			wget -q https://packages.microsoft.com/config/ubuntu/19.04/packages-microsoft-prod.deb
+			sudo dpkg -i packages-microsoft-prod.deb
+			sudo apt-get install apt-transport-https
+			sudo apt-get update
+			sudo apt-get install dotnet-sdk-2.2
+			NOTE: Does not work in Ubuntu 19.04.
+		
+22. Connect to the animal puppeteering script using the http bottle server.
+		a. Use a browser to point to the IP address determined in step 15, appending with the port 8080, i.e., http://192.168.172.192:8080.
+		b. Type into the box provided whatever you wish the animal to say.
+		c. Use the remote Windows version of the composite animals software and connect to the animal via the corresponding address by adding it to ..\config\Settings.xml at the property "bottleipaddress".
+		d. Launch the animals application, making sure the microphone is attached to the computer prior.
+		e. Try some test phrases like: "hello" and "how are you".
+		f. Add entries to the grammar file to improve SAPI recognition at ..\grammar\valid-grammar.txt ensuring not to leave any lines blank.
+			
+G. Enjoy your new talking animal friend!
+
+
+----------ERRATA--------------
+
+AfterBuild script for monodevelop
+
+	gcc -Wall -ggdb -shared -I/usr/local/include -I/usr/local/include/sphinxbase -I/usr/local/include/pocketsphinx -L/usr/local/lib -lpocketsphinx -lsphinxad -lsphinxbase -o bin\Debug\libsphinx_hue_detection.so @sphinx_hue_detection.c -lc -lpocketsphinx -lsphinxad -lsphinxbase
+
+If wishing to try a reinstall for a complete reformat, try
+	sudo apt-get remove --auto-remove pocketsphinx
+	sudo apt-get remove --auto-remove sphinxbase
+
