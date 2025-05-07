@@ -8,9 +8,9 @@ Begun in the late 1980s as a childhood vision but not able to technically-realiz
 
 ![joi](/images/cartheur-joi.jpg)
 
-# Cartheur Bipedal Bear Robots
+## Cartheur Bipedal Bear Robots
 
-## Key Features
+### Key Features
 
 1. **Design**: These robots are animated bipedal bears, designed to be friendly and approachable, aiming to foster emotional connections and adapt to human interactions.
 
@@ -28,7 +28,7 @@ Begun in the late 1980s as a childhood vision but not able to technically-realiz
 
 8. **Niche Market**: As niche products, these robots cater to specific markets and applications, such as research institutions, tech enthusiasts, and organizations focused on AI and robotics development.
 
-## Summary Table
+### Summary
 
 | Feature | Description |
 | --- | --- |
