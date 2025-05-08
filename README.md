@@ -40,6 +40,10 @@ Begun in the late 1980s as a childhood vision but not able to technically-realiz
 | **Primary Use** | Friendship, companionship, and emotional support |
 | **Market** | Niche, focusing on AI and robotics development |
 
+### Work
+
+* [development](/development/README.md)
+
 ### Patterns
 
 * [here](https://www.etsy.com/listing/1313601802/uncut-vintage-craft-sewing-pattern)
