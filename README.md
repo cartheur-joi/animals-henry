@@ -8,6 +8,10 @@ Begun in the late 1980s as a childhood vision but not able to technically-realiz
 
 ![joi](/images/cartheur-joi.jpg)
 
+### Advances
+
+New visions being implemented.
+
 ## Cartheur Bipedal Bear Robots
 
 ### Key Features
