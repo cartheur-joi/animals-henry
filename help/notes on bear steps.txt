@@ -1,0 +1,324 @@
+11 December 2018
+
+Notes on bear steps
+
+1. Make a Linux console app and rid yourself of the windows form nonsense. This is what step one (SHH) has taught me.
+2. Need a wrapper for Pocketsphinx that I think I can cross-compile in gcc in code:blocks in andorra. Test in a sample project in Windows, then integrate into Animals.Console. Bring over to Linux.
+3. Run ruxpin.py in the /home/chip/ChippyRuxpin by logging in via ssh as ssh chip@192.168.1.5, in the following manner: sudo python ruxpin.py
+4. Stop the script from running at anytime, but using ctrl-c and enter.
+5. Shutdown the CHIP by sudo shutdown now
+6. BTW: Fucking seems to work. Need coloured pencils then ready for a full-fudged test! later!!! :))
+7. Would be fun to do a simple output test with the mono speaker I found in the basement.
+8. Audio test will work if pulse audio is installed.
+
+SOME WELL-USED COMMANDS
+ip addr show wlan0
+# -*- coding: utf-8 -*-
+https://github.com/kamejoko80/ChippyRuxpin.git
+sudo apt-get remove --purge alsa-base pulseaudio
+sudo apt-get install pulseaudio 
+MBROLA wrapper linux
+wget http://steinerdatenbank.de/software/mbrola3.0.1h_armhf.deb
+sudo dpkg -i mbrola3.0.1h_armhf.deb
+
+-- audio issues solved --
+
+Fix on CHIP is to install pulse audio: sudo apt-get install pulseaudio
+
+9. GPIO seems screwy, but unsure. Will need to investigate by using another chip.
+--> Nah, walk through the GPIO setup, in terms of the python code. You'll get it worked out. So far, I created pins but found they are busy with a write error, might be priviledges. later!
+
+13 December 2018
+
+1. Starting from fresh today, python script runs without gpio folder access errors. While the voice still works, the motors are not turning. I'm thinking of setting up a test rack to do this separately, rather than with the computer inside. Will use arduino to start afresh, control it via a console app in C#, in Windows.
+
+Or perhaps work on the animal program and get it working in this manner. I'm happy with my mono speaker cable! :-)
+
+the time that we spend in the pursuit of the elders seems quite wasted since they never gave a shit about us anyway
+
+2. CHIP via webbottle, accepting remote commands to trigger the voice (and the movements soon!) to interact with what is being input. Need a completed animals to continue. Then return to engineering again, (then probably iterator one more time (like we did last summer).
+
+------ Perfy loggitudes -------
+
+Started animals prototype for the first time, in VERY DRAFT form on this point in time:
+
+192.168.1.5 - - [13/Dec/2018 11:47:26] UTC
+
+_______________________
+
+Crazy that starting over feeling.....Pavel, is that you?
+
+A good idea would be to build a web-application that sends messages to the chippyruxpin interface. Hook up the animals before wasting anymore time developing your solution. Get it on man, demo!!!
+
+Turn off at 1358 UTC.
+
+
+3. Pocketsphinx. Had to add some c-code to continuous.c to save the userinput (output from recognition) to a file. Now making and checking the make and will reinstall while in the source directory:
+
+sudo make uninstall then sudo make install
+
+An interesting way to find where the executable is, whereis pocketsphinx_continuous
+
+although I still cannot find the logfile location. It is in the same directory, if you launch pocketsphinx from the source directory.
+
+
+Check it out in another format.
+
+16 December 2018
+1944: Stuck on why I cannot access the header file from sphinxbase when running pocketsphinx from either the sanity or the sample project. Walked through everything I think I know and have NO fucking idea! :-( One thing for sure: going south side for a minute. Hope they won't miss me too much! Think I'll sort out the Jimmy then, like always I do.
+
+18 December 2018
+1228: Here to sort it some more. But an idea for the GPIO is to try implementing it within the Pi. Have an HDMI-->VGA adapter, a nice one, and can give it a whirl. But in the meantime...
+1318: Add the following to the AfterBuild property to the sample PiHueSphinx project:
+
+<Target Name="AfterBuild">
+	<Exec Command="$(CCompiler) -Wall -ggdb -shared $(ExtraIncludes) $(ExtraLibs) -o $(LibraryPath) @(CSource) -lc -lpocketsphinx -lsphinxad -lsphinxbase" />
+  </Target>
+
+And:
+
+<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+
+will get it to work.
+
+
+19 December 2018 - A helping of pi
+1107: ON a fresh pi, install monodevelop and xrdp. Turn on SSH, remote GPIO. On the host install rdesktop and connect with:
+
+rdesktop -g 90% 192.168.1.4
+
+then you don't have to buy anything extra!
+
+1126: Thought now is organization. Here on hp, the effort is sphinx. On andorra-pi, the GPIO control development.
+1715: A model using LEDs is in hand. If you want to open an editor, such as thonny, to write python scripts use:
+
+sudo -E thonny
+
+20 December 2018
+1709: Now under control with the animals app across platforms. Bear now has v2.3.0, with proper config of use of pesky external libraries.
+
+21 December 2018
+1055: Output error on the manner in which espeak is used the same for both CHIPs. Will move onto implementing gpio on the pi.
+
+1355: Stayed with chip in the interests of a direct line to implementation, is okay, but fails at the GPIO step. Animals in gui form a bit stupid, but demonstrates it will work and best to get the pocketsphinx part done next, so we can deploy the correctly-styled application (console) to launch via SSH. No facial features yet, but can I get at least a talking bear in hand?
+1451: Wired in number one board using Arduino jumpers. Feel much better about that.
+
+Please bless our little bear!
+
+1951: Blessings felt, we have ourselves a little bear! How many days since 27.01.2015? 1425 days.
+
+23 December 2018
+1757: Have pocketsphinx running on the bear, a slow start, so only load it once. But it cannot see the microphone (either one), although pavucontrol shows it is functional.
+1854: I think it, again, is the window manager. Cleaning tonight, then tomorrow for a full test. Regardless, next task is to get the input to the animals program, as well as, saving an output file of the text, then playing it.
+
+1926: One beautiful bear is assembled. With the tunic installed, the computer hides nicely behind it, safely tucked away. No inner door required. Tomorrow then!
+
+24 December 2018
+1539: A chair for the bear, wireless of course! Another test, this time upstairs and downstairs, although without an audience. Let's get to Christmas, now that we can properly! You finished your goal!
+
+25 December 2018
+1339: Some Christmas joy in setting up my new animal in-hand. Let's see how it goes.
+1552: Had it and it works quite well. However, keeping track of the app is a problem. Need the regular chip GUI flashed. Also, never use PocketDesk for chip, it hoses the windows, maybe because it is not totally updated, but there it is, for whatever it's worth.
+1553: Will most likely shift to writing mode for the remainder of the year. Why?
+
+BECAUSE THE BEAR IS DONE!
+
+Sure, it needs tuning: a new voice, and the event catch for the stdout of pocketsphinx, and some more intelligence in how the script blinks the bear's eyes, for it to be prototype ready. But this is to share with another fun-time at some point in 2019. Cau for now.
+
+29 December 2018
+1335: Started getting code for working on creating a nicer voice for the bear, but the process will take awhile, since I have to configure the speechd installation. I think it best to leave this until next year, since I don't have so much time. I did, however, make a new startup voice that I mean to propagate. Otherwise, let's meditate about our beautiful friendly bear and how it will help everyone in the world.
+
+18 January 2019
+1738: Built two more proto-boards and two mono-jack wires for two more animals: a second bear and a catepillar. They are in NL at the moment but I don't want to drag heavy equipment, if I can make them here and now. Ordered a set of jumper wires that hopefully, should be there when I arrive, else shortly thereafter. Regardless, I will need next to tackle the problem of the voice. This is the next step. Then, I want to deal with speech recognition, as I have one mic and a usb digital audio dongle. I'll need to sort a second arrangement which does not consume the usb port (using a jumper cable as it is too wide for the mono-audio jack and the usb dongle. This needs to be sorted for the second animal.
+
+For both, the cartheur patch needs to sorted. I have not made any inroads here and it requires dires attention!
+
+20 January 2019
+751: Here in the laboratory and have a grubby implementation to address. As it is a defaming word, he's the catepillar now. Took the time last evening to layout the parts required for today.
+824: Finished breakfasting and will now start by removing the screws from the battery box in the belly of the catepillar.
+911: Need to get wirecutters, stripper, and some 0.8 wire. In the meantime, will flash number two chip, as,
+
+./chip-update-firmware.sh -g
+
+in the CHIP-tools directory. Now update the OS by:
+
+1. Adding the following two lines to etc/apt/souces.list (removing any references to nextthing):
+
+deb http://chip.jfpossibilities.com/chip/debian/repo jessie main
+deb http://chip.jfpossibilities.com/chip/debian/pocketchip jessie main
+
+2. Change the line in etc/apt/preferences (removing any references to nextthing):
+
+Pin: origin chip.jfpossibilities.com
+
+3. sudo apt-get update, sudo apt-get upgrade
+4. sudo apt install git
+5. Clone the chippy ruxpin repo: https://github.com/kamejoko80/ChippyRuxpin.git
+6. IDEA: Collect all these repos and put them into the cartheur github page. Since github now sucks, thanks to M$, find an alternative for privacy and security. Also update the chippyRuxpin.py file to contain the new GPIO settings for v3 CHIP.
+7. Install prerequisites listed on the page (again, put into cartheur all these)
+8. Until forking, copy chippyRuxpin.py and chippyRuxpin_webFramework.py to the cloned directory.
+9. sudo apt install xrdp
+10. Install Mono: sudo apt install mono-runtime (since no compilation will be taking place here)
+11. Create a fixed IP address for the chip. Something like http(s)://192.168.1.5, for purposes of conformity.
+12. Note that the GPIO file is located at /sys/class/gpio/gpio1018/value
+13. Contine with SSH and do not fall into the laziness trap of Gtk#, when getting a finished copy of animals installed.
+14. Now it is ready to run the ruxpin script and accept remote calls. :-)
+
+1353: I've the tools and removed the battery box. The red and black wires are the connections to the battery. I'm left with red, green, yellow, and brown wires going to the face. According to a source, the four pin jack has three motor signals and the fourth, the bottom, being the audio. The black cable must, then, be the return for all motors and the speaker A01 and A02 pins to Teddy’s upper and lower jaw motors, and B01 and B02 to the eye motor. Now here is what I belive is the wiring pattern. From "Dr. Eeyore's hospital:
+
+Both Teddy and Grubby's connection receptacle is made of 4 sections with a metal contact (3 of them) rising at different levels to correspond to the sections on the plug. The audio is on the very
+bottom.
+
+>> The audio cable is brown,
+
+From http://www.robotsandcomputers.com/robots/ruxpin.htm, Channels 6, 7 and 8 are used to control Grubby's eyes, upper jaw and lower jaw. So counting sequentially (asecending as a guess of where to start. A cable schematic:
+
+----[ ] red (CH6-eyes) | green (CH7-upper jaw) | yellow (CH8-lower jaw) | brown (audio) >
+
+>> The eye input line is red. The upper jaw is green. The lower jaw is yellow. The audio line is brown. The return line (low) is the black wire returning to the battery. But since yellow and red seem to be connected together, this probably means there are only two motors in the head, and not three.
+
+1516: Building another teddy for reference, here are the connections:
+
+CHIP to driver:
+
+P4 --> AI2 (1017)
+P6 --> AI1 (1019)
+P5 --> BI1 (1018)
+P7 --> BI2 (1020)
+
+Driver to bear:
+
+A01 and A02 pins to jaw motor, and B01 and B02 to eye motor (Gen3 bear).
+
+1544: Got another bear speaking, but no motor movements. Want to take a break, do the shit I have to do in the meantime, and return. After a respite, that is.
+
+1556: Today's experience has demonstrated to me that what I can do now, with putting a bear together, is purely academic. Yes, there are wiring issues and some diagnostic work, but what would be nice is to start focusing on creating a more approachable speaking (character) voice.
+
+21 January 2019
+1428: Trying to be kind here but there seems nothing coming out from the GPIO, not even an LED test will confirm if it works.
+1543: First, be sure the LiPo battery is connected, even though you want to connect from the larger capacity battery. This powers the motors in the way the wiring is done. Two bears non-operational, one I can get to work like the one at the house, but the lower jaw motor doesn't want to function. Only the upper jaw will move on voicing. Better than nothing, which is what I had before.
+
+22 January 2019
+917: Turning the frown upside-down. Let's focus on keeping positive spirit today and enjoy the time we have with ourselves.
+
+918: Today will continue the deep dive by removing the fur from the two-motor ruxpin and seeing if what remians, can be useful as a demo. Also, I will need to start addressing the espeak voice.
+
+954: A good demo showing how to replace the servo motors with new ones: https://www.youtube.com/watch?v=34cfkA9HlXk, and its project page: http://www.tinkernut.com/portfolio/alexa-ruxpin-raspberry-pi-alexa-teddy-bear/. The motors are SG51R by TowerPro.
+
+1029: Another showing removal of the fur and operations on the native motors: https://www.youtube.com/watch?v=89DggHCyVVc
+1241: Got mbrola on WIndows WM, but does not play audio to the speaker, so moving on to thr armhf version, which needs to be on the CHIP. Will try direct implementation of new voice on bear sitting at the table.
+1433: Working on creating the correct voice here in Ubuntu, then will export for use in the animals system. Getting there step-by-step. Having fun too! But boy is it a lot of work!
+
+1523: Ran all the way through to the windows version. Now back in Linux and will have to take the time to spend in here. Now thinking of exercise, and a store run, through the winter wonderland.
+
+1651: I think when you want to go next into voicing, implement this into the process, as it is the best quality and best place to go from here: https://github.com/ibab/tensorflow-wavenet. I am thinking to stop now, as it is getting dark, and put some dinner in the oven. A fresh tomorrow would be grand, not such late sleeping! Need to write the first draft of the proposal to CVUT.
+
+Feeling good, feeling fine. A winter wonderland.
+
+25 January 2019
+1431: Have taken a defective, two-motor bear apart and awaiting my response to move along development.
+1437: Organized the parts for a second prototype. Decided will need now a bear and a catepillar.
+
+espeak -w speech.wav \"" Thinking on you and your lovely voice. "\" -s 130
+
+1643: Crux of the problem is generating a voice (file or whatever) that can be used in the espeak(-ng) synthesizer. That and getting the catepillar work out of the way, which will begin on the morrow. Later, gater!
+
+27 January 2019
+1546: Funny how on when I plan to write somewhere, it doesn't work out. Spent the day with the catepillar apart and discovered the two wires on the back of the servo are compatible with the open/close sequence of the animation. Will leave the length of wires in the catepillar, soldering on four sets of two-pin molex scavanged from the other boards, since no molex in the catepillar circuitry. But I will say it was well-behaved taking it apart and looking forward to stepping through all this.
+
+1654: Remaining todo to get the catepillar done and ready for show:
+
+1. Test all three motors work: Mouth motor noisy.
+2. Swap out mouth motor with a (more) silent one from a three-motor bear
+3. Replacement motor has a 5-pin plug, so can simply use a jumper-wire
+4. Cut two jumper wires (blue-green) in half and solder to the remaining two motors
+5. Identify which motor is which (nose verses mouth)
+6. Start planning reassembly [missing hot-glue gun (for holding plugged connections), shelf in rear quarters for holding the motherboard, driver board (?2), and battery, plastic mounted door for the micro-USB receptor plug in the belly]
+7. For now, reassemble with head, neck, and speaker cabinet (maybe head only?)
+8. Integrate software into the model
+9. Pasturize recognizer and synthesizer
+10. Have okey-dokey-smokey fun!
+
+1731: Soldering finished, so that I can close a big portion of the work out before dinner.
+1738: Taped bare connections, nearly burning hand. Testing speaker. Will need to rearrange before testing head unit and planning reassembly.
+1739: Speaker working! :-) Now onto rearranging the space...once the iron cools, that is.
+1814: Eye motor seems noisy. I'll do some investigating, but the only solution will probably to replace them in the cutting gearbox with hotglue, else just let them be noisy. Maybe I can investigate on YouTube if there is a discussion how to take them apart and make them more quiet. Otherwise, leave them for now.
+1815: I'll need to sort what to do with the second jaw motor, in terms of how the animal speaks. I also think there is some characteristic which can be utilized by having two motors for the jaw, one for the eyes.
+1922: Stopping for the night.
+
+28 January 2019
+1124: Did a scope of the hardware using the eyes, nose, and mouth. WIll need to work from the perspective of requiring two driver boards. Found a second catepillar and hope I can get it for the price I need. Made some drawings in the book about the wiring setup and want to address a three-motor animation. I have already changed/created "grubbyRuxpin.py" which has implementation of what I think the motor setup should go. Removed the twitter code but still need to clean an 'if' clause containing a mention.
+
+1138: I will also start to address the USB-mini microphone setup to see how well that works.
+1236: New code file is ready for testing in the catepillar setup.
+1654: What needs to happen next is for me to connect up the dual driver / nose motor addition to the circuitwerks.
+1715: Reading the documentation for the Festival speech synthesizer system. Pasturizing ongoing, so is the smoke.
+
+text2wave sayMe.txt -o saidIt.wav
+
+1803: A good idea is to create sable files (p.39-43 of festival manual [festival.ps]) that can build with all the custom voice parameters and run (can't grab sample XML file from file, sucks).
+
+text2wave fred.sable -o fred-sample.wav
+
+1829: Chapter 24 has description on hand-building a new voice. Also have bsv.pdf, handily called "Building synthetic voices".
+2042: Outside of getting the runtime to work--how does the USB-microphone play? Tomorrow's plan is to implement the hardware configuration, test the three-motor python script, then start drawing up the wiring pattern, putting together the parts, ready for the trip home. Please cable get here before time to leave! ;-)
+
+29 January 2019
+810: Starting in this morning on updates required. Breakfasting now.
+819: The process, via the closing of all open tabs in the browser, has revealed I need to work on wavenet for tensorflow and deep voice 3 testing and playing with.
+907: Boards have been set up (in draft format) and now will test the setup with the fred face mechanism. But first will need to move the grubbyRuxpin.py script to chip.
+933: It works! :-) The eye motor is pretty loud, while the nose and mouth motors not so much. I could replace it, but it will leave the question of the length of wires. I think I will leave it for now. 
+952: Cleaned all the python code and it will probably need a cleaning later on. Removed unnecessary files and parts of the program. This is the platform script to use.
+1001: Renamed all the python script files and placed in a folder "animals-fred". Code folder indicates the character that the functionality belongs to. This is how I will start mitigating the complexities. Now for a test of the new code bundle.
+1006: Tried a quick test with the new USB in/out, but does not work just plugging into chip.
+1008: The nose-mouth arrangement stays open once a dialog is complete. I'd like to see the mouth closed when not speaking.
+1009: First, let me integrate the second driver into the first board, sharing some jumpers.
+1016: I can make the goal of this session of doing a video demo. I can do this!
+1355: Driver board rewiring complete. Now testing the full rack before assembly of the front-half for a draft demo video.
+1357: It works! :-) Now time for reassembly of the front half, inclusive of the face.
+1400: I want to take it slowly, and draw the connections into the journal first, before taking apart to reassemble. Want to do that in one session, but want to take a break before diving in on the last step (for now).
+1517: Bound with plastic twist-ties the chip and the battery. Removed the manufacturer's tag from its rather annoying placement at the battery door. No mention of ruxpin no more. Running a final test now.
+1520: Good to go. After my shopping ride, and most likely after dinner, will see about reassembly.
+1939: Have not made the time for reassembly today. Am switching computers since I have admin duties before returning to the task at hand.
+
+30 January 2019
+2009: Dropping by to note that as of 1612 today, we have another animal friend, Fred the Llama. Recorded two videos, but sad the one that worked the best was one when the camera was not on. Might want to keep trying, of course. ;-) Very proud of myself and this accomplishment. I think it is even getting traction outside of my perview. Good job man!
+
+31.01.2019
+1008: Revved-up by the successes of the past few weeks. Now need to transition to a sales brain, but of course, no support in this endeavour, met with how everything is SO easy and how it will sell itself. If true, then great. But if not, I will not let such a scenario stretch forth.
+2333: Ready to head out to the other lab. Will pass by and see if I can net a director's job. Wouldn't be a bad line of work...
+
+14.02.2019
+1208: Back again, having spent the past few days in windows sorting the pocketsphinx library. I have a wrapper for it that works in windows. Since the audio interface will not be universal and my animal prototype is in Linux, coming back here to press forward. Director not but a project might maketh.
+1210: I must say though, there is a lot I have accomplished. The complexity of these is currently seen as astounding.
+1249: Getting it to work in Linux and all the details are a pain in the ass. Slowly and surely.
+1259: Also, let's spread out. We've got three tasks:
+	1. Recording audio from mic,
+	2. Pocketsphinx yielding text file containing what was voiced,
+	3. A more expressive servo motor motion,
+	4. A more sophisticated sounding spoken voice.
+1300: The above list should be the compendium of what work remains to get a prototype up and running.
+
+15.02.2019
+919: Was thinking to completely reformat the chip, since the sucker is not working. Will try reinstalling before the radical step of reformatting.
+
+10.03.2019
+1634: Start creating the show for Maribor. This is of the highest priority.
+
+30.03.2019
+1137: Both Henry the Bear and Fred the Catepillar startup with the script and can take remote commands via their respective bottle-servers. Maribor was rejected but the work does not stop. However, this phase of the work is now completed. 
+
+GREAT JOB! GREAT EFFORT! GREAT RESULT!
+
+30.04.2019
+1226: Building up the second catepillar I bought from eBay and picked up in the Hague, near the beach. Effort is going great and paying off by seemingly automatic assembly of rough-hewn parts to shorted the body by a segment to give it a different appeal and easier to carry under one's arm.
+1227: Flashing the fourth NTC computer and checking for the files required to get an animal up to speed by following the "animal_full-steps" document containing the setup instructions.
+
+04.05.2019
+1213: Ready to test the new animal but having issues with the script. What is the kill command for the executing python script? It is kill %1, since there is only one job, which you can discover by typing "jobs".
+1253: Removed the shell script from /etc/profile.d, leaving the entry in crontab. It works in terms of voice but not motors. They might be stuck. I will investigate.
+1314: The eye motor is noisy. Rather than replacing it with another, like I did for Fred, I will disassemble and lubricate using the graphite I purchased just for this occasion.
+
+
+
+
