@@ -1,6 +1,6 @@
 # animals-henry
 
-The animals henry animated bear.
+The animals henry animated bear. A next-level user experience of vocalized responses in an old-school style. A companion that is there for you anytime anywhere always.
 
 ## History
 
