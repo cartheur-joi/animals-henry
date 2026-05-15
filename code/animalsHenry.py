@@ -25,6 +25,8 @@ EYES_OPEN = 1017 # GPIO pin assigned to open the eyes. XIO-P4
 EYES_CLOSE = 1019 # GPIO pin assigned to close the eyes. XIO-P6
 MOUTH_OPEN = 1018 # GPIO pin assigned to open the mouth. XIO-P5
 MOUTH_CLOSE = 1020 # GPIO pin assigned to close the mouth. XIO-P7
+EYE_DRIVE_TIME = 0.25
+MOUTH_DRIVE_TIME = 0.15
 
 # Establish a connection to the GPIO pins.
 io = GPIO()
@@ -37,6 +39,7 @@ audio = None
 isRunning = True
 shutdownEvent = Event()
 shutdownInProgress = False
+speechFile = os.path.join(os.path.dirname(os.path.abspath(__file__)), "speech_runtime.wav")
 
 def waitOrShutdown(seconds):
     shutdownEvent.wait(seconds)
@@ -45,6 +48,31 @@ def waitOrShutdown(seconds):
 def closeEyesForShutdown():
     io.set( EYES_OPEN, 0 )
     io.set( EYES_CLOSE, 1 )
+    io.set( MOUTH_OPEN, 0 )
+    io.set( MOUTH_CLOSE, 0 )
+
+def stopEyes():
+    io.set( EYES_OPEN, 0 )
+    io.set( EYES_CLOSE, 0 )
+
+def driveEyes(action):
+    if action == "open":
+        io.set( EYES_CLOSE, 0 )
+        io.set( EYES_OPEN, 1 )
+    elif action == "close":
+        io.set( EYES_OPEN, 0 )
+        io.set( EYES_CLOSE, 1 )
+    else:
+        stopEyes()
+
+    if action != "stop":
+        if waitOrShutdown( EYE_DRIVE_TIME ):
+            return True
+        stopEyes()
+
+    return shutdownEvent.is_set()
+
+def stopMouth():
     io.set( MOUTH_OPEN, 0 )
     io.set( MOUTH_CLOSE, 0 )
 
@@ -60,7 +88,7 @@ def requestShutdown(signum=None, frame=None):
 # Set the mouth in motion to approximate visual pronunciation of audio.
 def updateMouth():
     lastMouthEvent = 0
-    lastMouthEventTime = 0
+    lastMouthDriveTime = 0
 
     while( audio == None ):
         if waitOrShutdown( 0.1 ):
@@ -69,7 +97,7 @@ def updateMouth():
     while isRunning:
         if( audio.mouthValue != lastMouthEvent ):
             lastMouthEvent = audio.mouthValue
-            lastMouthEventTime = time.time()
+            lastMouthDriveTime = time.time()
 
             if( audio.mouthValue == 1 ):
                 io.set( MOUTH_OPEN, 1 )
@@ -78,41 +106,63 @@ def updateMouth():
                 io.set( MOUTH_OPEN, 0 )
                 io.set( MOUTH_CLOSE, 1 )
         else:
-            if( time.time() - lastMouthEventTime > 0.5 ):
-                io.set( MOUTH_OPEN, 0 )
-                io.set( MOUTH_CLOSE, 0 )
+            if( lastMouthDriveTime > 0 and time.time() - lastMouthDriveTime > MOUTH_DRIVE_TIME ):
+                stopMouth()
 
-    io.set( MOUTH_OPEN, 0 )
-    io.set( MOUTH_CLOSE, 0 )
+        time.sleep( 0.02 )
+
+    stopMouth()
 
 # A routine for blinking the eyes in a semi-random fashion.
 def updateEyes():
     while isRunning:
-        io.set( EYES_CLOSE, 1 )
-        io.set( EYES_OPEN, 0 )
+        if driveEyes( "close" ):
+            break
         if waitOrShutdown( 3.0 ):
             break
-        io.set( EYES_CLOSE, 0 )
-        io.set( EYES_OPEN, 1 )
+        if driveEyes( "open" ):
+            break
         if waitOrShutdown( 0.4 ):
             break
-        io.set( EYES_CLOSE, 1 )
-        io.set( EYES_OPEN, 0 )
+        if driveEyes( "close" ):
+            break
         if waitOrShutdown( 3.5 ):
             break
-        io.set( EYES_CLOSE, 0 )
-        io.set( EYES_OPEN, 0 )
+        stopEyes()
         if waitOrShutdown( randint( 0,7) ):
             break
 
     if shutdownInProgress:
         closeEyesForShutdown()
     else:
-        io.set( EYES_CLOSE, 0 )
-        io.set( EYES_OPEN, 0 )
+        stopEyes()
    
 def talk(myText):
-    os.system("echo '" + myText + "' | festival --tts")
+    speechText = str(myText or "")
+
+    try:
+        generator = subprocess.Popen(
+            ["text2wave", "-o", speechFile],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        generator.communicate(speechText)
+
+        if generator.returncode == 0 and os.path.isfile(speechFile):
+            audio.play(speechFile)
+        else:
+            fallback = subprocess.Popen(
+                ["festival", "--tts"],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            fallback.communicate(speechText)
+    finally:
+        if os.path.isfile(speechFile):
+            os.remove(speechFile)
+
     return myText
 
 signal.signal( signal.SIGTERM, requestShutdown )

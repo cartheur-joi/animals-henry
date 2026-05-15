@@ -18,8 +18,22 @@ EYES_OPEN = 1017
 EYES_CLOSE = 1019
 MOUTH_OPEN = 1018
 MOUTH_CLOSE = 1020
+EYE_DRIVE_TIME = 0.25
+MOUTH_DRIVE_TIME = 0.15
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SPEECH_FILE = os.path.join(SCRIPT_DIR, "speech.wav")
+
+
+def set_eye_outputs(io, action):
+    if action == "open":
+        io.set(EYES_OPEN, 0)
+        io.set(EYES_CLOSE, 1)
+    elif action == "close":
+        io.set(EYES_OPEN, 1)
+        io.set(EYES_CLOSE, 0)
+    else:
+        io.set(EYES_OPEN, 0)
+        io.set(EYES_CLOSE, 0)
 
 
 def set_outputs(io, open_pin, close_pin, action):
@@ -36,10 +50,16 @@ def set_outputs(io, open_pin, close_pin, action):
 
 def pulse(io, name, open_pin, close_pin, action, seconds):
     print("%s %s for %.1f seconds" % (name, action, seconds))
-    set_outputs(io, open_pin, close_pin, action)
+    if name == "eyes":
+        set_eye_outputs(io, action)
+        time.sleep(EYE_DRIVE_TIME)
+        set_eye_outputs(io, "stop")
+    else:
+        set_outputs(io, open_pin, close_pin, action)
+        time.sleep(MOUTH_DRIVE_TIME)
+        set_outputs(io, open_pin, close_pin, "stop")
+
     time.sleep(seconds)
-    set_outputs(io, open_pin, close_pin, "stop")
-    time.sleep(0.5)
 
 
 def find_henry_pid():
@@ -154,14 +174,20 @@ def main():
         pulse(io, "mouth", MOUTH_OPEN, MOUTH_CLOSE, "close", 1.5)
 
         print("Testing combined motion")
-        set_outputs(io, EYES_OPEN, EYES_CLOSE, "close")
+        set_eye_outputs(io, "close")
+        time.sleep(EYE_DRIVE_TIME)
+        set_eye_outputs(io, "stop")
         set_outputs(io, MOUTH_OPEN, MOUTH_CLOSE, "open")
-        time.sleep(1.5)
-        set_outputs(io, EYES_OPEN, EYES_CLOSE, "open")
-        set_outputs(io, MOUTH_OPEN, MOUTH_CLOSE, "close")
-        time.sleep(1.5)
-        set_outputs(io, EYES_OPEN, EYES_CLOSE, "stop")
+        time.sleep(MOUTH_DRIVE_TIME)
         set_outputs(io, MOUTH_OPEN, MOUTH_CLOSE, "stop")
+        time.sleep(1.5)
+        set_eye_outputs(io, "open")
+        time.sleep(EYE_DRIVE_TIME)
+        set_eye_outputs(io, "stop")
+        set_outputs(io, MOUTH_OPEN, MOUTH_CLOSE, "close")
+        time.sleep(MOUTH_DRIVE_TIME)
+        set_outputs(io, MOUTH_OPEN, MOUTH_CLOSE, "stop")
+        time.sleep(1.5)
 
         play_speech_with_mouth(io)
         print("Motor test complete")
