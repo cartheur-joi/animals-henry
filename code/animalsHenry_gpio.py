@@ -15,9 +15,15 @@ class GPIO:
         
     def setup(self,pin):
         cmd = "echo " + str(pin) + " > /sys/class/gpio/export"
-        subprocess.call(cmd,shell=True, stdout=subprocess.PIPE)
-        cmd = "echo \"out\" > /sys/class/gpio/gpio" + str(pin) + "/direction" 
-        subprocess.Popen(cmd,shell=True, stdout=subprocess.PIPE)
+        subprocess.call(cmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        gpioPath = "/sys/class/gpio/gpio" + str(pin)
+        waitCount = 0
+        while not os.path.isdir(gpioPath) and waitCount < 20:
+            time.sleep(0.05)
+            waitCount += 1
+
+        cmd = "echo \"out\" > " + gpioPath + "/direction"
+        subprocess.call(cmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.pins.append([pin,0,0])
         self.set( pin, 0 )
         
@@ -27,12 +33,11 @@ class GPIO:
                 if(pinObject[0]==pin and pinObject[1]!=val):
                     pinObject[1]=val
                     cmd = "echo " + str(val) + " > /sys/class/gpio/gpio" + str(pinObject[0]) + "/value"
-                    subprocess.Popen(cmd,shell=True, stdout=subprocess.PIPE)
+                    subprocess.call(cmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
     def cleanup(self):
-        for pinObject in self.pins:
-            cmd = "echo 0 > /sys/class/gpio/gpio" + str(pinObject[0]) + "/value"
-            subprocess.Popen(cmd,shell=True, stdout=subprocess.PIPE)
-            cmd = "echo " + str(pinObject[0]) + " > /sys/class/gpio/unexport"
-            subprocess.Popen(cmd,shell=True, stdout=subprocess.PIPE)
+        if self.pins != None:
+            for pinObject in self.pins:
+                cmd = "echo 0 > /sys/class/gpio/gpio" + str(pinObject[0]) + "/value"
+                subprocess.call(cmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.pins = None

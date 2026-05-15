@@ -5,10 +5,11 @@
 
 from bottle import run, get, post, request, route, redirect
 import socket
+import time
 
 class WebFramework:
     def __init__(self,func):
-        self.ip = [(s.connect(('8.8.8.8', 80)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
+        self.ip = self.getIpAddress()
         print( "--------------------------------" )
         print( "cartheur presents emotional toys" )
         print( "-----" )
@@ -39,4 +40,19 @@ class WebFramework:
             self.talkFunc( speech )
             redirect('/')
 
-        run(host=self.ip, port=8080, debug=True)
+        run(host='0.0.0.0', port=8080, debug=True)
+
+    def getIpAddress(self):
+        attempt = 0
+        while attempt < 30:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                sock.connect(('8.8.8.8', 80))
+                return sock.getsockname()[0]
+            except:
+                time.sleep(1)
+                attempt += 1
+            finally:
+                sock.close()
+
+        return '127.0.0.1'

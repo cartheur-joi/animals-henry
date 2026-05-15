@@ -16,12 +16,16 @@ import subprocess
 
 class AudioPlayer:
     def __init__(self):
+        self.outputGain = 2.0
+        self.configureMixer()
+        self.prevAudiovalue = 0
+        self.mouthValue = 0
+
+    def configureMixer(self):
         subprocess.Popen('amixer cset numid=1 100%' ,shell=True, stdout=subprocess.PIPE ) # Set PA mixer volume to 100%
         subprocess.Popen('amixer cset numid=2 2' ,shell=True, stdout=subprocess.PIPE ) # Set right mixer to be "right" (2)
         subprocess.Popen('amixer cset numid=3 1' ,shell=True, stdout=subprocess.PIPE ) # Set left mixer to be "left" (1)
         subprocess.Popen('amixer cset numid=4 1' ,shell=True, stdout=subprocess.PIPE ) # Set DAC self.output to be "Direct" (2... or 1 for "Mixed" if you prefer)
-        self.prevAudiovalue = 0
-        self.mouthValue = 0
         
     def play(self,fileName):
         # Initialise matrix
@@ -39,10 +43,11 @@ class AudioPlayer:
         data = wavfile.readframes(chunk)
         try:
           while data!='':
-             output.write(data)
+             boostedData = audioop.mul(data, 2, self.outputGain)
+             output.write(boostedData)
              # Split channel data and find maximum volume   
-             channel_l=audioop.tomono(data, 2, 1.0, 0.0)
-             channel_r=audioop.tomono(data, 2, 0.0, 1.0)
+             channel_l=audioop.tomono(boostedData, 2, 1.0, 0.0)
+             channel_r=audioop.tomono(boostedData, 2, 0.0, 1.0)
              max_vol_factor =5000
              max_l = audioop.max(channel_l,2)/max_vol_factor
              max_r = audioop.max(channel_r,2)/max_vol_factor
@@ -55,6 +60,7 @@ class AudioPlayer:
           data = None
         
         os.system( '/etc/init.d/alsa-utils restart' )
+        self.configureMixer()
         sleep( .25 )
 
     def generateMouthSignal(self,val):
@@ -65,4 +71,3 @@ class AudioPlayer:
             self.mouthValue = 1
 
         self.prevAudiovalue = val
-
