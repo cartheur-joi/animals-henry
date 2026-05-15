@@ -12,8 +12,9 @@ import sys
 import time
 import subprocess
 import os
+import signal
 from random import randint
-from threading import Thread
+from threading import Thread, Event
 from animalsHenry_audioPlayer import AudioPlayer
 from animalsHenry_gpio import GPIO
 from animalsHenry_webFramework import WebFramework
@@ -34,6 +35,27 @@ io.setup( EYES_CLOSE )
 
 audio = None
 isRunning = True
+shutdownEvent = Event()
+shutdownInProgress = False
+
+def waitOrShutdown(seconds):
+    shutdownEvent.wait(seconds)
+    return shutdownEvent.is_set()
+
+def closeEyesForShutdown():
+    io.set( EYES_OPEN, 0 )
+    io.set( EYES_CLOSE, 1 )
+    io.set( MOUTH_OPEN, 0 )
+    io.set( MOUTH_CLOSE, 0 )
+
+def requestShutdown(signum=None, frame=None):
+    global isRunning
+    global shutdownInProgress
+
+    shutdownInProgress = True
+    isRunning = False
+    shutdownEvent.set()
+    closeEyesForShutdown()
 
 # Set the mouth in motion to approximate visual pronunciation of audio.
 def updateMouth():
@@ -41,7 +63,8 @@ def updateMouth():
     lastMouthEventTime = 0
 
     while( audio == None ):
-        time.sleep( 0.1 )
+        if waitOrShutdown( 0.1 ):
+            return
         
     while isRunning:
         if( audio.mouthValue != lastMouthEvent ):
@@ -59,21 +82,34 @@ def updateMouth():
                 io.set( MOUTH_OPEN, 0 )
                 io.set( MOUTH_CLOSE, 0 )
 
+    io.set( MOUTH_OPEN, 0 )
+    io.set( MOUTH_CLOSE, 0 )
+
 # A routine for blinking the eyes in a semi-random fashion.
 def updateEyes():
     while isRunning:
         io.set( EYES_CLOSE, 1 )
         io.set( EYES_OPEN, 0 )
-        time.sleep( 3.0 )
+        if waitOrShutdown( 3.0 ):
+            break
         io.set( EYES_CLOSE, 0 )
         io.set( EYES_OPEN, 1 )
-        time.sleep( 0.4 )
+        if waitOrShutdown( 0.4 ):
+            break
         io.set( EYES_CLOSE, 1 )
         io.set( EYES_OPEN, 0 )
-        time.sleep( 3.5 )
+        if waitOrShutdown( 3.5 ):
+            break
         io.set( EYES_CLOSE, 0 )
         io.set( EYES_OPEN, 0 )
-        time.sleep( randint( 0,7) )
+        if waitOrShutdown( randint( 0,7) ):
+            break
+
+    if shutdownInProgress:
+        closeEyesForShutdown()
+    else:
+        io.set( EYES_CLOSE, 0 )
+        io.set( EYES_OPEN, 0 )
    
 def talk(myText):
     os.system( "espeak \",...\" 2>/dev/null" ) # Sometimes the beginning of audio can get cut off. Insert silence.
@@ -81,6 +117,9 @@ def talk(myText):
     os.system( "espeak -w speech.wav \"" + myText + "\" -s 130" )
     audio.play("speech.wav")
     return myText
+
+signal.signal( signal.SIGTERM, requestShutdown )
+signal.signal( signal.SIGINT, requestShutdown )
 
 mouthThread = Thread(target=updateMouth)
 mouthThread.start()
@@ -90,5 +129,9 @@ audio = AudioPlayer()
 
 web = WebFramework(talk)
 isRunning = False
-io.cleanup()
+shutdownEvent.set()
+mouthThread.join( 1.0 )
+eyesThread.join( 1.0 )
+if not shutdownInProgress:
+    io.cleanup()
 sys.exit(1)
